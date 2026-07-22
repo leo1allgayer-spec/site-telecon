@@ -199,12 +199,17 @@
 <div class="flex flex-col md:flex-row items-center gap-8">
 <div class="md:w-1/3">
 <h2 class="font-headline-md text-headline-md mb-2">Consulte sua cobertura</h2>
-<p class="text-on-surface-variant">Descubra os planos disponíveis no seu endereço agora mesmo.</p>
+<p class="text-on-surface-variant">Informe seu endereço e confirme a disponibilidade com nossa equipe.</p>
 </div>
-<div class="md:w-2/3 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-<input class="w-full bg-[#F1F3F5] border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" placeholder="CEP" type="text"/>
-<input class="w-full bg-[#F1F3F5] border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" placeholder="Número" type="text"/>
-<button class="bg-primary hover:bg-primary/90 text-white font-label-md text-label-md py-3 rounded-xl transition-all">Verificar</button>
+<div class="md:w-2/3 w-full">
+<form class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="coverage-form" novalidate>
+<label class="sr-only" for="coverage-cep">CEP</label>
+<input aria-describedby="coverage-status" autocomplete="postal-code" class="w-full bg-[#F1F3F5] border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" id="coverage-cep" inputmode="numeric" maxlength="9" placeholder="CEP" required type="text"/>
+<label class="sr-only" for="coverage-number">Número</label>
+<input aria-describedby="coverage-status" autocomplete="address-line2" class="w-full bg-[#F1F3F5] border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none" id="coverage-number" maxlength="10" placeholder="Número" required type="text"/>
+<button class="bg-primary hover:bg-primary/90 text-white font-label-md text-label-md py-3 rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-70" id="coverage-submit" type="submit">Verificar</button>
+</form>
+<p aria-live="polite" class="hidden mt-4 text-sm" id="coverage-status" role="status"></p>
 </div>
 </div>
 </div>
@@ -645,6 +650,60 @@
 <span class="absolute -top-12 right-0 bg-white text-on-surface px-4 py-2 rounded-lg text-label-sm shadow-xl opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap border border-surface-variant pointer-events-none">Fale com um atendente!</span>
 </a>
 <script>
+        const COVERAGE_WHATSAPP_URL = 'https://wa.me/message/SP7CPXEKZFLIO1';
+        const coverageForm = document.getElementById('coverage-form');
+        const coverageCep = document.getElementById('coverage-cep');
+        const coverageNumber = document.getElementById('coverage-number');
+        const coverageStatus = document.getElementById('coverage-status');
+        const coverageSubmit = document.getElementById('coverage-submit');
+
+        coverageCep.addEventListener('input', () => {
+            const digits = coverageCep.value.replace(/\D/g, '').slice(0, 8);
+            coverageCep.value = digits.length > 5
+                ? `${digits.slice(0, 5)}-${digits.slice(5)}`
+                : digits;
+        });
+
+        coverageForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const cep = coverageCep.value.replace(/\D/g, '');
+            const number = coverageNumber.value.trim();
+
+            coverageStatus.classList.remove('hidden', 'text-green-700', 'text-red-700');
+
+            if (cep.length !== 8) {
+                coverageStatus.textContent = 'Digite um CEP válido com 8 números.';
+                coverageStatus.classList.add('text-red-700');
+                coverageCep.focus();
+                return;
+            }
+
+            if (!number) {
+                coverageStatus.textContent = 'Digite o número do endereço.';
+                coverageStatus.classList.add('text-red-700');
+                coverageNumber.focus();
+                return;
+            }
+
+            coverageStatus.textContent = `CEP ${coverageCep.value}, número ${number}: confirme a cobertura com nossa equipe no WhatsApp.`;
+            coverageStatus.classList.add('text-green-700');
+            coverageSubmit.textContent = 'Abrindo WhatsApp...';
+            coverageSubmit.disabled = true;
+
+            const chatWindow = window.open(COVERAGE_WHATSAPP_URL, '_blank');
+            if (!chatWindow) {
+                window.location.href = COVERAGE_WHATSAPP_URL;
+                return;
+            }
+            chatWindow.opener = null;
+
+            window.setTimeout(() => {
+                coverageSubmit.textContent = 'Verificar';
+                coverageSubmit.disabled = false;
+            }, 1200);
+        });
+
         function toggleAccordion(button) {
             const item = button.parentElement;
             const isActive = item.classList.contains('active');
