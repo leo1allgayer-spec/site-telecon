@@ -16,6 +16,23 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+        .nav-link {
+            color: #5c3f3d;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 0.25rem;
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .nav-link:hover,
+        .nav-link.active {
+            color: #bb0016;
+        }
+        .nav-link.active {
+            border-bottom-color: #bb0016;
+            font-weight: 700;
+        }
+        section[id] {
+            scroll-margin-top: 88px;
+        }
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -130,15 +147,15 @@
 <!-- Header Navigation -->
 <header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 glass-nav shadow-sm">
 <nav class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center">
-<a class="flex items-center gap-2" href="#">
+<a class="flex items-center gap-2" href="#inicio">
 <img alt="Grupo Tech Logo" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnuf_oy6nHia3z3v1JivLqc30mkFjnfTJse1b1HjRQXODPoF9_u7atuqwuNtgypGJQigRG1-M5toPoasAuK1esL49LOhFCB9kn9RleEkTKEDiPwbAsxgbHcstMGGeX1lZNzSECkccrDCxzS5E6xXFLX6E3LRmtSEPi21jgTWs1odqAtmGCd68QRjTLarNUAKc353-Se0gSxCpdKYTYFfYaD0mf9_cI7SmKVMFGbH_GmohlUpCVFsj04FMkB8w6nsP545jr2hR_J75B"/>
 </a>
 <div class="hidden lg:flex items-center gap-8">
-<a class="text-primary border-b-2 border-primary font-bold pb-1 font-body-md text-body-md" href="#">Início</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#planos">Planos</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#combos">Combos</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#beneficios">Benefícios</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#atendimento">Atendimento</a>
+<a aria-current="page" class="nav-link active font-body-md text-body-md" href="#inicio">Início</a>
+<a class="nav-link font-body-md text-body-md" href="#planos">Planos</a>
+<a class="nav-link font-body-md text-body-md" href="#combos">Combos</a>
+<a class="nav-link font-body-md text-body-md" href="#beneficios">Benefícios</a>
+<a class="nav-link font-body-md text-body-md" href="#atendimento">Atendimento</a>
 </div>
 <a class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full font-label-md text-label-md transition-all active:scale-95 flex items-center gap-2" href="https://wa.me/message/SP7CPXEKZFLIO1">
 <span class="material-symbols-outlined text-[20px]">chat</span>
@@ -148,7 +165,7 @@
 </header>
 <main class="pt-24">
 <!-- Hero Section -->
-<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center" id="inicio">
 <div class="order-2 lg:order-1">
 <span class="inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-full font-label-sm text-label-sm mb-6">ULTRA VELOCIDADE EM FIBRA</span>
 <h1 class="font-display-lg text-[36px] md:text-display-lg mb-6 text-on-surface">Internet rápida para conectar tudo o que importa</h1>
@@ -571,7 +588,7 @@
 </div>
 </section>
 <!-- Final Call to Action -->
-<section class="py-24">
+<section class="py-24" id="atendimento">
 <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
 <div class="bg-primary rounded-card p-12 md:p-24 text-center text-white relative overflow-hidden">
 <div class="absolute inset-0 opacity-10 pointer-events-none">
@@ -703,6 +720,61 @@
                 coverageSubmit.disabled = false;
             }, 1200);
         });
+
+        const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+        const navSections = navLinks
+            .map(link => document.querySelector(link.getAttribute('href')))
+            .filter(Boolean);
+        const siteHeader = document.querySelector('header');
+
+        function setActiveNav(sectionId) {
+            navLinks.forEach(link => {
+                const isActive = link.getAttribute('href') === `#${sectionId}`;
+                link.classList.toggle('active', isActive);
+
+                if (isActive) {
+                    link.setAttribute('aria-current', 'page');
+                } else {
+                    link.removeAttribute('aria-current');
+                }
+            });
+        }
+
+        function updateActiveNav() {
+            const headerHeight = siteHeader ? siteHeader.offsetHeight : 0;
+            const marker = window.scrollY + headerHeight + (window.innerHeight * 0.25);
+            let activeSection = navSections[0];
+
+            navSections.forEach(section => {
+                if (section.offsetTop <= marker) {
+                    activeSection = section;
+                }
+            });
+
+            if (activeSection) {
+                setActiveNav(activeSection.id);
+            }
+        }
+
+        let navTicking = false;
+        window.addEventListener('scroll', () => {
+            if (navTicking) return;
+
+            navTicking = true;
+            window.requestAnimationFrame(() => {
+                updateActiveNav();
+                navTicking = false;
+            });
+        }, { passive: true });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                const sectionId = link.getAttribute('href').slice(1);
+                setActiveNav(sectionId);
+            });
+        });
+
+        updateActiveNav();
 
         function toggleAccordion(button) {
             const item = button.parentElement;
